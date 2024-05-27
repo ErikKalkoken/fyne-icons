@@ -14,15 +14,38 @@ type iconInfo struct {
 	icon fyne.Resource
 }
 
+var icons [][]iconInfo
+var zoom float32 = 1.0
+
 func main() {
 	a := app.New()
 	w := a.NewWindow("Fyne icons")
-
-	b := loadIcons()
+	icons = loadIcons()
 
 	page := container.NewVBox()
-	for _, g := range b {
-		row := container.NewGridWrap(fyne.Size{Width: 150, Height: 75})
+	redrawPage(page)
+
+	zoomIn := widget.NewButtonWithIcon("", theme.ZoomInIcon(), func() {
+		if zoom < 2 {
+			zoom += 0.10
+			redrawPage(page)
+		}
+	})
+	zoomOut := widget.NewButtonWithIcon("", theme.ZoomOutIcon(), func() {
+		if zoom > 0.75 {
+			zoom -= 0.10
+			redrawPage(page)
+		}
+	})
+	w.SetContent(container.NewBorder(container.NewHBox(zoomIn, zoomOut), nil, nil, nil, container.NewVScroll(page)))
+	w.Resize(fyne.NewSize(800, 600))
+	w.ShowAndRun()
+}
+
+func redrawPage(page *fyne.Container) {
+	page.RemoveAll()
+	for _, g := range icons {
+		row := container.NewGridWrap(fyne.Size{Width: 150 * zoom, Height: 75 * zoom})
 		for _, i := range g {
 			label := widget.NewLabel(i.name)
 			label.Alignment = fyne.TextAlignCenter
@@ -34,10 +57,6 @@ func main() {
 		page.Add(row)
 		page.Add(widget.NewLabel(""))
 	}
-
-	w.SetContent(container.NewVScroll(page))
-	w.Resize(fyne.NewSize(800, 600))
-	w.ShowAndRun()
 }
 
 func loadIcons() [][]iconInfo {
